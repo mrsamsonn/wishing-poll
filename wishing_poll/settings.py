@@ -130,6 +130,8 @@ STATIC_URL = '/static/'
 # Development settings
 STATICFILES_DIRS = [
     BASE_DIR / 'theme' / 'static',
+    BASE_DIR / 'static',
+    BASE_DIR /'css',
 ]
 
 # Production settings
