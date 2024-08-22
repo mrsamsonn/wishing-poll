@@ -1,0 +1,182 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wishing Poll</title>
+    {% tailwind_css %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* Ensure the background is continuous */
+        body {
+            background: linear-gradient(to top right, #ffdcdc, #ffffff, #cff8ff);
+            background-attachment: fixed; /* Ensures background stays fixed */
+            background-size: cover; /* Ensures background covers the entire screen */
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <div class="flex flex-col w-screen h-screen">
+        <div id="navbar" class="flex flex-row space-x-10 font-bold mt-10 ml-10">
+            <!-- About Dropdown -->
+            <div class="relative group">
+                <a href="#" class="">
+                    <div>About</div>
+                </a>
+                <div class="absolute hidden group-hover:block bg-white border rounded-md shadow-lg mt-2 p-4 w-64">
+                    <p class="text-gray-700 text-sm">
+                        This poll allows users to anonymously share ideas for projects they wish existed.
+                        <br>
+                        <br>
+                        It's a platform for both expressing creative desires and for developers seeking inspiration,
+                        showcasing the most wanted innovations 
+                    </p>
+                    <div class="mt-3 text-sm text-gray-500 text-right">
+                        mrsamsonn
+                    </div>
+                </div>
+            </div>
+            <!-- GitHub Link -->
+            <a href="https://github.com/mrsamsonn/wishing_poll" target="_blank" class="">
+                <div>Github</div>
+            </a>
+        </div>        
+        <div id="poll-container" class="flex flex-col items-center w-screen" style="margin-top: 15vh;">
+            <div id="poll" class="flex flex-col w-1/4 bg-white p-10 rounded-3xl drop-shadow-lg space-y-5">
+                <div class="font-bold text-2xl">Poll</div>
+                <div id="poll-question" class="text-base font-normal">{{ poll.question }}</div>
+                <div id="poll-options" class="space-y-4">
+                    <!-- Options will be dynamically inserted here -->
+                </div>
+                <button id="show-more" class="text-blue-500 mt-4 hidden">Show More</button>
+                <input type="text" id="new-option-text" placeholder="Add Option" class="py-3 w-full rounded-2xl border-none bg-slate-200 text-center">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            fetchPollData(); // Fetch poll data when page loads
+
+            function submitVote(optionId, removeVote = false) {
+                $.post("{% url 'vote' %}", {
+                    option_id: optionId,
+                    remove_vote: removeVote,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                }, function(response) {
+                    if (response.status === 'success') {
+                        fetchPollData();
+                    }
+                });
+            }
+
+            $('#new-option-text').keypress(function(e) {
+                if (e.which === 13) { // Enter key
+                    var newOptionText = $('#new-option-text').val().trim();
+                    if (!newOptionText) {
+                        alert('Please enter an option text!');
+                        return;
+                    }
+
+                    $.post("{% url 'add_option' poll.id %}", {
+                        option_text: newOptionText,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    }, function(response) {
+                        if (response.status === 'success') {
+                            fetchPollData(); // Refresh poll data
+                            $('#new-option-text').val(''); // Clear the input field
+                        } else {
+                            alert('Failed to add option.');
+                        }
+                    });
+                }
+            });
+
+            $('#show-more').click(function() {
+                $('#additional-options').toggleClass('hidden');
+                $(this).text($('#additional-options').hasClass('hidden') ? 'Show More' : 'Show Less');
+            });
+
+            function fetchPollData() {
+                $.get("{% url 'get_poll_data' poll.id %}", function(data) {
+                    $('#poll-question').text(data.question);
+                    $('#poll-options').empty();
+                    
+                    // Sort options by votes in descending order
+                    data.options.sort((a, b) => b.votes - a.votes);
+                    
+                    var maxVotes = Math.max(...data.options.map(option => option.votes)); // Find the maximum number of votes
+    
+                    // Show only the top 3 options
+                    var topOptions = data.options.slice(0, 3);
+                    var remainingOptions = data.options.slice(3);
+
+                    // Append top options
+                    $.each(topOptions, function(index, option) {
+                        var progressWidth = maxVotes > 0 ? (option.votes / maxVotes) * 100 : 0; // Calculate percentage
+
+                        $('#poll-options').append(`
+                            <div class="flex flex-col mb-4">
+                                <div class="flex items-center">
+                                    <input type="radio" name="option" value="${option.id}" id="option${option.id}" class="mr-2">
+                                    <label for="option${option.id}" class="mr-2">${option.option_text}</label>
+                                    <span id="votes${option.id}" class="mr-2">${option.votes}</span> votes
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-4 mt-2">
+                                    <div id="progress-bar-${option.id}" class="bg-blue-500 h-4 rounded-full" style="width: ${progressWidth}%;"></div>
+                                </div>
+                            </div>
+                        `);
+                    });
+
+                    // Add remaining options hidden initially
+                    if (remainingOptions.length > 0) {
+                        $('#poll-options').append(`
+                            <div id="additional-options" class="hidden space-y-4">
+                                ${remainingOptions.map(option => `
+                                    <div class="flex flex-col mb-4">
+                                        <div class="flex items-center">
+                                            <input type="radio" name="option" value="${option.id}" id="option${option.id}" class="mr-2">
+                                            <label for="option${option.id}" class="mr-2">${option.option_text}</label>
+                                            <span id="votes${option.id}" class="mr-2">${option.votes}</span> votes
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-4 mt-2">
+                                            <div id="progress-bar-${option.id}" class="bg-blue-500 h-4 rounded-full" style="width: ${(maxVotes > 0 ? (option.votes / maxVotes) * 100 : 0)}%;"></div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `);
+
+                        // Show "Show More" button if there are remaining options
+                        $('#show-more').removeClass('hidden').show();
+                    } else {
+                        // Hide "Show More" button if no additional options
+                        $('#show-more').addClass('hidden').hide();
+                    }
+
+                    // Handle option selection
+                    $('input[name="option"]').change(function() {
+                        var selectedOptionId = $(this).val();
+                        var previouslySelectedOptionId = $('input[name="option"]:checked').not(this).val();
+
+                        if (previouslySelectedOptionId) {
+                            // If another option was selected before, remove vote from the previously selected option
+                            submitVote(previouslySelectedOptionId, true);
+                        }
+                        
+                        if ($(this).is(':checked')) {
+                            // If the current option is selected, add vote
+                            submitVote(selectedOptionId);
+                        } else {
+                            // If the current option is unchecked, remove vote
+                            submitVote(selectedOptionId, true);
+                        }
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
