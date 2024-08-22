@@ -135,6 +135,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Development settings
 STATICFILES_DIRS = [
     BASE_DIR / 'theme' / 'static',
+    BASE_DIR / 'theme' / 'static_src',
 ]
 
 # Production settings
