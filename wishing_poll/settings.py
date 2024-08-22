@@ -132,6 +132,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'theme' / 'static',
     BASE_DIR / 'static',
     BASE_DIR /'css',
+    BASE_DIR,
 ]
 
 # Production settings
