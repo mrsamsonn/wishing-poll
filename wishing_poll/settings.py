@@ -141,7 +141,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'staticfiles'), )
 
 # Production settings
-STATIC_ROOT = (os.path.join(BASE_DIR, 'theme/static'), )
+STATIC_ROOT = BASE_DIR / 'theme' / 'static',
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
