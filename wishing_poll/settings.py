@@ -126,20 +126,25 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = '/static/'
+# STATIC_URL = '/static/'
 
-# WhiteNoise settings to serve static files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# # WhiteNoise settings to serve static files
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 
-# Development settings
-STATICFILES_DIRS = [
-    BASE_DIR / 'theme' / 'static',
-    BASE_DIR / 'theme' / 'static_src',
-]
+# # Development settings
+# STATICFILES_DIRS = [
+#     BASE_DIR / 'theme' / 'static',
+#     BASE_DIR / 'theme' / 'static_src',
+# ]
 
-# Production settings
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+# # Production settings
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'theme/static/')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # for deployment
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
